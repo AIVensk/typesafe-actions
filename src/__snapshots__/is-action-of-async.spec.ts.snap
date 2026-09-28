@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`async groups preserve action unions action (type) should match snapshot 1`] = `"TH.PayloadAction<\\"REQUEST\\", string> | TH.PayloadAction<\\"SUCCESS\\", number[]> | TH.PayloadAction<\\"FAILURE\\", Error>"`;
+
+exports[`async groups preserve action unions action.payload (type) should match snapshot 1`] = `"number[]"`;
+
+exports[`async groups preserve action unions filtered (type) should match snapshot 1`] = `"(TH.PayloadAction<\\"REQUEST\\", string> | TH.PayloadAction<\\"SUCCESS\\", number[]> | TH.PayloadAction<\\"FAILURE\\", Error>)[]"`;
+
+exports[`async groups preserve action unions mixed (type) should match snapshot 1`] = `"(TH.PayloadAction<\\"REQUEST\\", string> | TH.PayloadAction<\\"SUCCESS\\", number[]> | TH.PayloadAction<\\"FAILURE\\", Error> | TH.PayloadAction<\\"OTHER\\", boolean>)[]"`;
+
+exports[`async groups preserve action unions withCancel (type) should match snapshot 1`] = `"(TH.PayloadAction<\\"START\\", void> | TH.PayloadAction<\\"DONE\\", number> | TH.PayloadAction<\\"ERROR\\", Error> | TH.PayloadAction<\\"CANCEL\\", string>)[]"`;
+
+exports[`rejects incomplete groups at compile time const invalid: typeof filtered = [other(true)] (type) should match snapshot 1`] = `
+"Type 'PayloadAction<\\"OTHER\\", boolean>' is not assignable to type 'PayloadAction<\\"REQUEST\\", string> | PayloadAction<\\"SUCCESS\\", number[]> | PayloadAction<\\"FAILURE\\", Error>'.
+  Type 'PayloadAction<\\"OTHER\\", boolean>' is not assignable to type 'PayloadAction<\\"REQUEST\\", string>'.
+    Type '\\"OTHER\\"' is not assignable to type '\\"REQUEST\\"'."
+`;
+
+exports[`rejects incomplete groups at compile time isActionOf({ ...fetch, success: 42 }) (type) should match snapshot 1`] = `
+"Argument of type '{ success: number; request: TH.PayloadActionCreator<\\"REQUEST\\", string>; failure: TH.PayloadActionCreator<\\"FAILURE\\", Error>; }' is not assignable to parameter of type 'AsyncActionCreators | ActionCreator<{ type: string; }> | ActionCreatorSource[]'.
+  Type '{ success: number; request: TH.PayloadActionCreator<\\"REQUEST\\", string>; failure: TH.PayloadActionCreator<\\"FAILURE\\", Error>; }' is not assignable to type 'AsyncActionCreators'.
+    Types of property 'success' are incompatible.
+      Type 'number' is not assignable to type 'ActionCreator<{ type: string; }>'.
+        Type 'number' is not assignable to type '(...args: any[]) => { type: string; }'."
+`;
+
+exports[`rejects incomplete groups at compile time isActionOf({ request: fetch.request }) (type) should match snapshot 1`] = `
+"Argument of type '{ request: TH.PayloadActionCreator<\\"REQUEST\\", string>; }' is not assignable to parameter of type 'AsyncActionCreators | ActionCreator<{ type: string; }> | ActionCreatorSource[]'.
+  Type '{ request: PayloadActionCreator<\\"REQUEST\\", string>; }' is missing the following properties from type 'AsyncActionCreators': success, failure"
+`;

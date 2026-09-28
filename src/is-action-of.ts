@@ -10,27 +10,48 @@ export type ActionCreator<T extends { type: string }> = ((
 ) => T) &
   ActionCreatorTypeMetadata<T['type']>;
 
-/**
- * @description (curried assert function) check if an action is the instance of given action-creator(s)
- * @description it works with discriminated union types
- */
-export function isActionOf<AC extends ActionCreator<{ type: string }>>(
-  actionCreator: AC | AC[],
-  action: { type: string }
-): action is ReturnType<AC>;
+type AsyncActionCreators = {
+  request: ActionCreator<{ type: string }>;
+  success: ActionCreator<{ type: string }>;
+  failure: ActionCreator<{ type: string }>;
+  cancel?: ActionCreator<{ type: string }>;
+};
+
+type ActionCreatorSource =
+  | ActionCreator<{ type: string }>
+  | AsyncActionCreators;
+
+type CreatorOf<AC extends ActionCreatorSource> = AC extends ActionCreator<{
+  type: string;
+}>
+  ? AC
+  : AC extends AsyncActionCreators
+  ? Extract<
+      AC[Extract<keyof AC, 'request' | 'success' | 'failure' | 'cancel'>],
+      ActionCreator<{ type: string }>
+    >
+  : never;
 
 /**
- * @description (curried assert function) check if an action is the instance of given action-creator(s)
- * @description it works with discriminated union types
+ * @description check whether an action matches a creator or an async-action group
+ * @description narrows discriminated unions; accepts arrays and a curried form
  */
-export function isActionOf<AC extends ActionCreator<{ type: string }>>(
+export function isActionOf<AC extends ActionCreatorSource>(
+  actionCreator: AC | AC[],
+  action: { type: string }
+): action is ReturnType<CreatorOf<AC>>;
+
+/**
+ * @description curried guard for a creator, async-action group, or array of either
+ */
+export function isActionOf<AC extends ActionCreatorSource>(
   actionCreator: AC | AC[]
-): (action: { type: string }) => action is ReturnType<AC>;
+): (action: { type: string }) => action is ReturnType<CreatorOf<AC>>;
 
 /**
  * implementation
  */
-export function isActionOf<AC extends ActionCreator<{ type: string }>>(
+export function isActionOf<AC extends ActionCreatorSource>(
   actionCreatorOrCreators: AC | AC[],
   action?: { type: string }
 ) {
@@ -38,9 +59,28 @@ export function isActionOf<AC extends ActionCreator<{ type: string }>>(
     throwIsEmpty(1);
   }
 
-  const actionCreators = Array.isArray(actionCreatorOrCreators)
+  const sources: ActionCreatorSource[] = Array.isArray(actionCreatorOrCreators)
     ? actionCreatorOrCreators
     : [actionCreatorOrCreators];
+  const actionCreators: Array<ActionCreator<{ type: string }>> = [];
+
+  sources.forEach(source => {
+    if (
+      source != null &&
+      typeof source === 'object' &&
+      'request' in source &&
+      'success' in source &&
+      'failure' in source
+    ) {
+      // createAsyncAction includes an undefined cancel property when omitted.
+      actionCreators.push(source.request, source.success, source.failure);
+      if (source.cancel !== undefined) {
+        actionCreators.push(source.cancel);
+      }
+    } else {
+      actionCreators.push(source as ActionCreator<{ type: string }>);
+    }
+  });
 
   actionCreators.forEach(checkInvalidActionCreatorInArray);
 
@@ -49,10 +89,8 @@ export function isActionOf<AC extends ActionCreator<{ type: string }>>(
       actionCreator => _action.type === actionCreator.getType!()
     );
 
-  // 1 arg case => return curried version
   if (action === undefined) {
     return assertFn;
   }
-  // 2 args case => invoke assertFn and return the result
   return assertFn(action);
 }

@@ -866,6 +866,22 @@ _Check if action is an instance of given enhanced action-creator(s)
 
 > **WARNING**: Regular action creators and [action](#action) will not work with this helper
 
+Async-action groups from `createAsyncAction` can also be passed directly. The
+guard matches request, success, failure, and the optional cancellation action,
+preserving the union of their payload and metadata types:
+
+```ts
+const fetchTodos = createAsyncAction('FETCH', 'FETCH_OK', 'FETCH_ERROR')<
+  void, Todo[], Error
+>();
+const matchingActions = actions.filter(isActionOf(fetchTodos));
+if (isActionOf(fetchTodos, action) && action.type === 'FETCH_OK') {
+  action.payload; // Todo[]
+}
+// Arrays may mix individual creators and async-action groups.
+isActionOf([fetchTodos, addTodo], action);
+```
+
 ```ts
 // can be used as a binary function
 isActionOf(actionCreator, action)
